@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Arcane · Letters</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Noto+Serif+SC:wght@300;400&family=Caveat:wght@400;600&family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg-void: #07050f; }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html, body { width:100%; height:100%; overflow:hidden; }
+    body {
+      background: var(--bg-void);
+      display:flex; justify-content:center; align-items:center;
+      user-select:none;
+    }
+    #particle-canvas { position:fixed; inset:0; pointer-events:none; z-index:0; }
+
+    /* ══════════════════════════════ 舞台 ══════════════════════════════ */
+    #stage { width:100vw; height:100vh; position:relative; z-index:1; perspective:1400px; }
+
+    /* ══════════════════════════════ 通用页面 ══════════════════════════════ */
+    .page {
+      position:absolute; inset:0;
+      overflow:hidden;
+      display:none; flex-direction:column;
+      align-items:center; justify-content:center;
+    }
+    .page.active { display:flex; }
+    .fade-in  { animation: fadeIn  .4s ease both; }
+    .slide-up { animation: slideUp .45s cubic-bezier(.2,0,.2,1) both; }
+    @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(5vh)} to{opacity:1;transform:translateY(0)} }
+
+    /* ══════════════════════════════ 封面页 ══════════════════════════════ */
+    #page-cover {
+      background: radial-gradient(ellipse at 50% 40%, #1a0d2e 0%, #07050f 70%);
+      gap: clamp(16px, 4vh, 32px); cursor:pointer;
+    }
+    #page-cover::before {
+      content:''; position:absolute; inset:0;
+      background: url('风格页3.webp') center center / cover no-repeat;
+      opacity:0.18; pointer-events:none; z-index:0;
+    }
+
+    .envelope-wrap { position:relative; z-index:1; }
+    .envelope {
+      width: clamp(180px, 55vw, 280px); height: clamp(128px, 38vw, 200px);
+      position:relative;
+      filter: drop-shadow(0 8px 32px rgba(120,60,200,0.5));
+      transition: transform .4s cubic-bezier(.2,0,.2,1);
+    }
+    .envelope-wrap:hover .envelope { transform: translateY(-6px) scale(1.02); }
+
+    .env-body {
+      position:absolute; inset:0;
+      background: url('封面.webp') center center / cover no-repeat;
+      border-radius:4px; border:1px solid rgba(155,109,255,0.25);
+      opacity:0.5;
+    }
+    .env-flap-bottom, .env-flap-top { display:none; }
+
+    .env-seal-cover {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      width: clamp(36px, 10vw, 56px); height: clamp(36px, 10vw, 56px);
+      z-index:2;
+    }
+    .env-seal-cover svg { width:100%; height:100%; filter:drop-shadow(0 0 8px rgba(155,109,255,0.7)); }
+    .seal-pulse { animation: sealPulse 2.5s ease-in-out infinite; }
+    @keyframes sealPulse {
+      0%,100%{ filter:drop-shadow(0 0 6px rgba(155,109,255,0.5)); }
+      50%    { filter:drop-shadow(0 0 16px rgba(155,109,255,1)); }
+    }
+
+    .cover-title {
+      font-family:'Cinzel',serif; color:#c9a0ff;
+      font-size: clamp(16px, 5vw, 24px); letter-spacing: clamp(3px, 1.5vw, 8px);
+      text-shadow:0 0 20px rgba(155,109,255,0.7); z-index:1;
+    }
+    .cover-sub { color:#4a3a6a; font-size: clamp(9px, 2.5vw, 13px); letter-spacing: clamp(2px, 1vw, 5px); z-index:1; }
+    .cover-hint {
+      color:#4a3a6a; font-size: clamp(9px, 2.5vw, 12px); letter-spacing: clamp(2px, 1vw, 4px);
+      animation:blink 2.5s ease-in-out infinite; z-index:1;
+    }
+    @keyframes blink { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
+
+    /* ══════════════════════════════ 信件列表页 ══════════════════════════════ */
+    #page-list {
+      background: radial-gradient(ellipse at 50% 20%, #12091e 0%, #07050f 70%);
+      justify-content:flex-start; padding:0;
+    }
+    #page-list::before {
+      content:''; position:absolute; inset:0;
+      background: url('角色.webp') center center / cover no-repeat;
+      opacity:0.15; pointer-events:none; z-index:0;
+    }
+    .list-header {
+      position:absolute; top: clamp(28px, 6vh, 52px); left:0; right:0;
+      text-align:center; z-index:2; pointer-events:none;
+    }
+    .list-title {
+      font-family:'Cinzel',serif; color:#9b6dff;
+      font-size: clamp(11px, 3.5vw, 16px); letter-spacing: clamp(3px, 1.2vw, 6px);
+      text-shadow:0 0 10px rgba(155,109,255,0.5);
+    }
+    .list-line { width:80px; height:1px; margin:8px auto 0; background:linear-gradient(90deg,transparent,#3a2860,transparent); }
+
+    #letter-list { position:absolute; inset:0; }
+
+    .letter-card {
+      width: clamp(260px, 88vw, 420px); padding: clamp(10px, 3vw, 16px) clamp(10px, 3vw, 18px);
+      border-radius:6px;
+      border:1px solid rgba(255,255,255,0.07);
+      cursor:pointer; position:absolute; overflow:hidden;
+      display:flex; align-items:center; gap: clamp(8px, 2vw, 14px);
+      transform: rotate(var(--rot)) translate(var(--tx), var(--ty));
+      transition: transform .25s cubic-bezier(.2,0,.2,1), box-shadow .25s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    .letter-card:hover {
+      transform: rotate(calc(var(--rot) * 0.3)) translate(var(--tx), var(--ty)) scale(1.04);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 16px var(--accent);
+      z-index:5;
+    }
+    .letter-card::before {
+      content:''; position:absolute; left:0; top:0; bottom:0;
+      width:3px; background:var(--accent); box-shadow:0 0 8px var(--accent);
+    }
+    .letter-card::after {
+      content:''; position:absolute; top:-100%; left:-60%; width:40%; height:300%;
+      background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.05) 50%,transparent 60%);
+      transition:transform .4s;
+    }
+    .letter-card:hover::after { transform:translateX(400%); }
+
+    /* ══════════════════════════════ 信件阅读页 ══════════════════════════════ */
+    #page-letter { padding:0; justify-content:flex-start; background: var(--letter-bg, #12080e); }
+
+    .letter-header {
+      width:100%; padding: clamp(16px, 3vh, 28px) clamp(16px, 5vw, 28px) clamp(12px, 2vh, 18px);
+      position:relative; flex-shrink:0;
+      border-bottom:1px solid rgba(255,255,255,0.05);
+    }
+    .letter-header-bg { position:absolute; inset:0; background:var(--letter-header-bg, rgba(0,0,0,0.3)); pointer-events:none; }
+    .letter-header-line { position:absolute; bottom:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--letter-accent),transparent); }
+    .letter-seal-large { width: clamp(40px, 12vw, 58px); height: clamp(40px, 12vw, 58px); margin:0 auto clamp(6px, 1.5vh, 12px); display:block; }
+    .letter-seal-large svg { width:100%; height:100%; filter:drop-shadow(0 0 10px var(--letter-accent)); }
+    .letter-from-to { text-align:center; }
+    .letter-sender {
+      font-family:'Cinzel',serif;
+      font-size: clamp(13px, 4vw, 18px); color:var(--letter-accent);
+      letter-spacing:3px; text-shadow:0 0 10px var(--letter-accent);
+    }
+    .letter-arrow-to { color:#3a2860; font-size: clamp(10px, 2.5vw, 13px); margin:4px 0; }
+    .letter-receiver { font-size: clamp(11px, 3vw, 14px); color:#a07cc5; letter-spacing:2px; }
+
+    .letter-scroll {
+      flex:1; width:100%; overflow-y:auto;
+      padding: clamp(16px, 3vh, 28px) clamp(20px, 6vw, 32px) clamp(60px, 12vh, 90px);
+      -webkit-overflow-scrolling:touch;
+    }
+    .letter-scroll::-webkit-scrollbar { width:3px; }
+    .letter-scroll::-webkit-scrollbar-track { background:transparent; }
+    .letter-scroll::-webkit-scrollbar-thumb { background:rgba(155,109,255,0.2); border-radius:2px; }
+
+    .letter-body {
+      font-family:'Caveat','Noto Serif SC',cursive;
+      font-size: clamp(14px, 4.2vw, 20px); line-height:2.2; color:var(--letter-ink);
+      white-space:pre-wrap; word-break:break-word; position:relative;
+    }
+    .letter-body::before {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background:repeating-linear-gradient(180deg,transparent,transparent calc(2.2em - 1px),rgba(255,255,255,0.03) calc(2.2em - 1px),rgba(255,255,255,0.03) 2.2em);
+    }
+
+    .letter-footer {
+      position:absolute; bottom: clamp(10px, 2vh, 20px); left:0; right:0;
+      padding: clamp(8px, 1.5vh, 14px) clamp(16px, 5vw, 28px);
+      display:flex; justify-content:space-between; align-items:center;
+      background:linear-gradient(0deg, var(--letter-bg,#12080e) 60%, transparent);
+      z-index:5;
+    }
+    .btn-close-letter {
+      color:#c9a0ff; font-size: clamp(11px, 3vw, 14px); letter-spacing:2px;
+      cursor:pointer; transition:color .2s;
+      padding: clamp(4px, 1vw, 8px) clamp(10px, 3vw, 16px);
+      border:1px solid rgba(155,109,255,0.3); border-radius:4px; background:rgba(155,109,255,0.08);
+    }
+    .btn-close-letter:hover { color:#e8d0ff; border-color:rgba(155,109,255,0.6); background:rgba(155,109,255,0.15); }
+    .letter-page-num { color:#2a1e40; font-size: clamp(9px, 2.5vw, 12px); letter-spacing:1px; }
+
+    /* ══════════════════════════════ 结尾页 ══════════════════════════════ */
+    #page-ending {
+      background: radial-gradient(ellipse at 50% 50%, #12091e 0%, #07050f 70%);
+    }
+    #page-ending::before {
+      content:''; position:absolute; inset:0;
+      background: url('风格页.webp') left center / cover no-repeat;
+      opacity:0.5; pointer-events:none; z-index:0;
+    }
+
+    /* ══════════════════════════════ 音乐按钮 ══════════════════════════════ */
+    #music-btn {
+      position:fixed; top: clamp(10px, 2vh, 18px); right: clamp(10px, 3vw, 18px);
+      width: clamp(30px, 9vw, 40px); height: clamp(30px, 9vw, 40px); border-radius:50%;
+      background:rgba(12,8,20,0.9); border:1px solid #1a1230;
+      color:#3a2860; cursor:pointer; font-size: clamp(12px, 3.5vw, 16px);
+      display:flex; align-items:center; justify-content:center;
+      z-index:100; transition:border-color .2s,color .2s,box-shadow .2s;
+    }
+    #music-btn.on { border-color:#9b6dff; color:#9b6dff; box-shadow:0 0 10px rgba(155,109,255,0.4); }
+  </style>
+</head>
+<body>
+<canvas id="particle-canvas"></canvas>
+<button id="music-btn">♪</button>
+<audio id="bgm" loop src="Ma Meilleure Ennemie-Stromae&Pomme.mp3"></audio>
+
+<div id="stage">
+
+  <!-- ── 封面 ── -->
+  <div class="page active" id="page-cover">
+    <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:clamp(16px,4vh,32px);cursor:pointer;width:100%;" onclick="goTo('list')">
+      <div class="envelope-wrap">
+        <div class="envelope">
+          <div class="env-body"></div>
+          <div class="env-flap-bottom"></div>
+          <div class="env-flap-top"></div>
+          <div class="env-seal-cover seal-pulse">
+            <svg viewBox="0 0 52 52" fill="none">
+              <polygon points="26,2 48,14 48,38 26,50 4,38 4,14" fill="rgba(80,40,140,0.6)" stroke="#9b6dff" stroke-width="1.5"/>
+              <polygon points="26,10 40,18 40,34 26,42 12,34 12,18" fill="rgba(60,20,100,0.4)" stroke="#c9a0ff" stroke-width="0.8"/>
+              <circle cx="26" cy="26" r="5" fill="#9b6dff" opacity="0.9"/>
+              <line x1="26" y1="2" x2="26" y2="10" stroke="#c9a0ff" stroke-width="0.8" opacity="0.6"/>
+              <line x1="26" y1="42" x2="26" y2="50" stroke="#c9a0ff" stroke-width="0.8" opacity="0.6"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cover-title">ARCANE</div>
+    <div class="cover-sub">LETTERS &amp; ARCHIVES</div>
+    <div class="cover-hint">点击信封开启</div>
+  </div>
+
+  <!-- ── 信件列表 ── -->
+  <div class="page" id="page-list">
+    <div onclick="goTo('cover')" style="position:absolute;top:clamp(10px,2vh,16px);left:clamp(10px,3vw,16px);z-index:10;cursor:pointer;opacity:0.45;transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.45">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><line x1="3" y1="3" x2="15" y2="15" stroke="#9b6dff" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="3" x2="3" y2="15" stroke="#9b6dff" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+    <div class="list-header">
+      <div class="list-title">LETTERS</div>
+      <div class="list-line"></div>
+    </div>
+    <div id="letter-list"></div>
+
+    <!-- Lway 入口 -->
+    <div onclick="goTo('ending')" class="letter-card" id="lway-card" style="--accent:#9b6dff;--rot:2deg;--tx:0px;--ty:0px;background:#0a0514;cursor:pointer;">
+      <div id="lway-bg" style="position:absolute;inset:0;opacity:0.3;pointer-events:none;border-radius:6px;background-image:url('角色.webp');background-size:cover;background-position:center bottom;"></div>
+      <div style="position:relative;z-index:1;width:100%;text-align:center;color:#c9a0ff;font-family:Caveat,cursive;font-size:clamp(18px,5.5vw,28px);font-weight:600;text-shadow:0 0 12px rgba(155,109,255,0.5);">Lway</div>
+    </div>
+  </div>
+
+  <!-- ── 信件阅读 ── -->
+  <div class="page" id="page-letter">
+    <div id="letter-bg-img" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.12;pointer-events:none;z-index:0;"></div>
+    <div class="letter-header" id="letter-header" style="position:relative;z-index:1;">
+      <div class="letter-header-bg" id="letter-header-bg"></div>
+      <div class="letter-header-line" id="letter-header-line"></div>
+      <div class="letter-seal-large" id="letter-seal-large"></div>
+      <div class="letter-from-to">
+        <div class="letter-sender" id="letter-sender"></div>
+        <div class="letter-arrow-to">——致——</div>
+        <div class="letter-receiver" id="letter-receiver"></div>
+      </div>
+    </div>
+    <div class="letter-scroll" style="position:relative;z-index:1;">
+      <div class="letter-body" id="letter-body"></div>
+    </div>
+    <div class="letter-footer">
+      <div class="btn-close-letter" onclick="goTo('list')">← 归档</div>
+      <div class="letter-page-num" id="letter-page-num"></div>
+    </div>
+  </div>
+
+  <!-- ── 结尾 ── -->
+  <div class="page" id="page-ending">
+    <div onclick="goTo('list')" style="position:absolute;top:clamp(10px,2vh,16px);left:clamp(10px,3vw,16px);z-index:10;cursor:pointer;opacity:0.6;transition:opacity .2s;color:#e8d0ff;font-size:clamp(10px,3vw,13px);letter-spacing:2px;text-shadow:0 2px 6px rgba(0,0,0,0.8);" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">← 返回</div>
+
+    <!-- 右上角作者卡片 -->
+    <div style="position:absolute;top:clamp(40px,8vh,70px);right:clamp(12px,4vw,24px);z-index:2;display:flex;flex-direction:column;align-items:center;gap:clamp(8px,2vh,16px);width:clamp(140px,48vw,210px);">
+      <div style="width:clamp(56px,16vw,84px);height:clamp(56px,16vw,84px);border-radius:50%;border:2px solid rgba(155,109,255,0.5);overflow:hidden;box-shadow:0 0 18px rgba(155,109,255,0.4);background:#1a1030;display:flex;align-items:center;justify-content:center;">
+        <img src="头像.png" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=color:#9b6dff;font-size:10px;>头像占位</div>'">
+      </div>
+      <div style="font-family:Caveat,cursive;font-size:clamp(22px,7vw,34px);color:#e8d0ff;text-shadow:0 0 18px rgba(155,109,255,0.7),0 2px 10px rgba(0,0,0,0.9);letter-spacing:3px;font-weight:600;">沫路</div>
+      <div style="font-family:Caveat,'Noto Serif SC',cursive;font-size:clamp(12px,3.5vw,17px);color:#c9a0ff;text-shadow:0 2px 10px rgba(0,0,0,0.9);text-align:center;line-height:1.8;letter-spacing:1px;">沫沫人生，陌陌你我。</div>
+      <div style="font-family:Caveat,cursive;font-size:clamp(14px,4vw,20px);color:#c9a0ff;text-shadow:0 2px 8px rgba(0,0,0,0.9);letter-spacing:2px;font-weight:600;">QQ：1447909240</div>
+    </div>
+
+    <div onclick="goTo('cover')" style="position:absolute;bottom:clamp(16px,3vh,28px);left:50%;transform:translateX(-50%);z-index:2;color:#c9a0ff;text-shadow:0 2px 8px rgba(0,0,0,0.8);font-size:clamp(10px,3vw,13px);letter-spacing:2px;cursor:pointer;opacity:0.7;transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">← 回到封面</div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════
+// 信件数据
+// ══════════════════════════════════════
+const letters = [
+  {
+    id: 'vi-jinx', from: 'VI', to: 'JINX / POWDER',
+    bg:'#0e0808', headerBg:'rgba(80,30,10,0.4)', accent:'#e07840', ink:'#e8d0b0',
+    bgm:'', bgImg:'金克斯.webp',
+    seal: `<svg viewBox="0 0 52 52" fill="none">
+      <circle cx="26" cy="26" r="24" fill="rgba(180,80,20,0.7)" stroke="#e07840" stroke-width="1.5"/>
+      <rect x="14" y="20" width="24" height="16" rx="4" fill="rgba(240,120,40,0.6)" stroke="#e07840" stroke-width="1"/>
+      <rect x="14" y="16" width="10" height="6" rx="2" fill="rgba(240,120,40,0.5)" stroke="#e07840" stroke-width="0.8"/>
+      <rect x="25" y="17" width="8" height="5" rx="2" fill="rgba(240,120,40,0.5)" stroke="#e07840" stroke-width="0.8"/>
+      <rect x="14" y="36" width="24" height="5" rx="2" fill="rgba(200,80,20,0.5)" stroke="#e07840" stroke-width="0.8"/>
+    </svg>`,
+    body: `Powder，\n\n（在这里写Vi写给Powder/Jinx的信件内容。）\n\n——你的姐姐\n   Vi`,
+  },
+  {
+    id: 'silco-jinx', from: 'SILCO', to: 'JINX',
+    bg:'#0a0510', headerBg:'rgba(60,10,40,0.5)', accent:'#8b2252', ink:'#d0b0c8',
+    bgm:'', bgImg:'风格页2.webp',
+    seal: `<svg viewBox="0 0 52 52" fill="none">
+      <circle cx="26" cy="26" r="24" fill="rgba(80,10,50,0.75)" stroke="#8b2252" stroke-width="1.5"/>
+      <ellipse cx="26" cy="26" rx="10" ry="14" fill="rgba(120,20,70,0.5)" stroke="#8b2252" stroke-width="1"/>
+      <ellipse cx="26" cy="26" rx="4" ry="10" fill="rgba(180,40,100,0.6)" stroke="#c04080" stroke-width="0.8"/>
+      <ellipse cx="26" cy="26" rx="2" ry="6" fill="#c04080" opacity="0.9"/>
+    </svg>`,
+    body: `Jinx，\n\n（在这里写Silco写给Jinx的信件内容。）\n\n——Silco`,
+  },
+  {
+    id: 'jinx-self', from: 'JINX', to: '自己',
+    bg:'#060c14', headerBg:'rgba(10,40,80,0.5)', accent:'#4fc3f7', ink:'#b8d8e8',
+    bgm:'', bgImg:'风格页4.webp',
+    seal: `<svg viewBox="0 0 52 52" fill="none">
+      <circle cx="26" cy="26" r="24" fill="rgba(10,40,80,0.75)" stroke="#4fc3f7" stroke-width="1.5"/>
+      <polygon points="26,10 38,17 38,31 26,38 14,31 14,17" fill="rgba(20,80,140,0.5)" stroke="#4fc3f7" stroke-width="1"/>
+      <polygon points="26,16 33,20 33,28 26,32 19,28 19,20" fill="rgba(40,120,180,0.4)" stroke="#80d8ff" stroke-width="0.7"/>
+      <circle cx="26" cy="26" r="3" fill="#4fc3f7" opacity="0.9"/>
+    </svg>`,
+    body: `嘿，爆爆，\n\n（在这里写Jinx的自述内容。）\n\n——Jinx`,
+  },
+  {
+    id: 'vander', from: 'VANDER', to: 'VI & POWDER',
+    bg:'#0c0a06', headerBg:'rgba(50,35,10,0.5)', accent:'#a07840', ink:'#d8c898',
+    bgm:'', bgImg:'风格页.webp',
+    seal: `<svg viewBox="0 0 52 52" fill="none">
+      <circle cx="26" cy="26" r="24" fill="rgba(60,40,10,0.75)" stroke="#a07840" stroke-width="1.5"/>
+      <path d="M20,14 L32,14 L29,24 Q26,30 26,30 Q26,30 23,24 Z" fill="rgba(160,120,40,0.5)" stroke="#a07840" stroke-width="1"/>
+      <line x1="26" y1="30" x2="26" y2="38" stroke="#a07840" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="20" y1="38" x2="32" y2="38" stroke="#a07840" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>`,
+    body: `孩子们，\n\n（在这里写Vander写给Vi和Powder的信件内容。）\n\n——Vander`,
+  },
+];
+
+// ══════════════════════════════════════
+// 页面切换
+// ══════════════════════════════════════
+let currentLetter = null;
+function goTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active','fade-in','slide-up'));
+  const t = document.getElementById('page-' + pageId);
+  t.classList.add('active', pageId === 'letter' ? 'slide-up' : 'fade-in');
+  if (pageId === 'letter' && currentLetter && currentLetter.bgm) {
+    const bgm = document.getElementById('bgm');
+    if (bgm.getAttribute('data-src') !== currentLetter.bgm) {
+      bgm.setAttribute('data-src', currentLetter.bgm);
+      bgm.src = currentLetter.bgm;
+      if (musicOn) bgm.play().catch(()=>{});
+    }
+  }
+}
+
+// ══════════════════════════════════════
+// 渲染列表（百分比定位）
+// ══════════════════════════════════════
+function renderList() {
+  const el = document.getElementById('letter-list');
+  const layout = [
+    { top:'15%', left:'4%',  rot:'-3.5deg' },
+    { top:'32%', left:'10%', rot:'2.8deg' },
+    { top:'49%', left:'2%',  rot:'-1.8deg' },
+    { top:'66%', left:'8%',  rot:'3.2deg' },
+  ];
+  const bgPosY = ['15%','33%','55%','75%'];
+  const fonts = [
+    'font-family:Caveat,cursive; font-size:clamp(20px,6.5vw,32px); font-weight:600;',
+    'font-family:Caveat,cursive; font-size:clamp(18px,6vw,30px); font-weight:600;',
+    'font-family:Caveat,cursive; font-size:clamp(22px,7vw,34px); font-weight:600;',
+    'font-family:Caveat,cursive; font-size:clamp(18px,6vw,30px); font-weight:600;',
+  ];
+  el.innerHTML = letters.map((l, i) => `
+    <div class="letter-card"
+         style="--accent:${l.accent};--rot:${layout[i].rot};--tx:0px;--ty:0px;
+                background:${l.bg};top:${layout[i].top};left:${layout[i].left};"
+         onclick="openLetter(${i})">
+      <div style="position:absolute;inset:0;background-image:url('角色.webp');background-size:cover;background-position:center ${bgPosY[i]};opacity:0.3;pointer-events:none;border-radius:6px;"></div>
+      <div style="position:relative;z-index:1;width:100%;text-align:center;color:${l.accent};${fonts[i]}text-shadow:0 0 12px ${l.accent};">${l.from}</div>
+    </div>`).join('');
+
+  // Lway卡片位置
+  const lway = document.getElementById('lway-card');
+  lway.style.top = '83%';
+  lway.style.left = '14%';
+  lway.style.width = 'clamp(180px,58vw,280px)';
+}
+
+// ══════════════════════════════════════
+// 打开信件
+// ══════════════════════════════════════
+function openLetter(i) {
+  const l = letters[i];
+  currentLetter = l;
+  const page = document.getElementById('page-letter');
+  page.style.setProperty('--letter-bg', l.bg);
+  page.style.setProperty('--letter-accent', l.accent);
+  page.style.setProperty('--letter-ink', l.ink);
+  page.style.background = l.bg;
+  document.getElementById('letter-bg-img').style.backgroundImage = l.bgImg ? `url('${l.bgImg}')` : 'none';
+  document.getElementById('letter-header-bg').style.background = l.headerBg;
+  document.getElementById('letter-header-line').style.background = `linear-gradient(90deg,transparent,${l.accent},transparent)`;
+  document.getElementById('letter-seal-large').innerHTML = l.seal;
+  document.getElementById('letter-sender').style.color = l.accent;
+  document.getElementById('letter-sender').style.textShadow = `0 0 10px ${l.accent}`;
+  document.getElementById('letter-sender').textContent = l.from;
+  document.getElementById('letter-receiver').textContent = l.to;
+  document.getElementById('letter-body').textContent = l.body;
+  document.getElementById('letter-body').style.color = l.ink;
+  document.getElementById('letter-page-num').textContent = `${i+1} / ${letters.length}`;
+  document.querySelector('.letter-scroll').scrollTop = 0;
+  goTo('letter');
+}
+
+// ══════════════════════════════════════
+// 音乐
+// ══════════════════════════════════════
+let musicOn = true;
+const bgm = document.getElementById('bgm');
+bgm.volume = 0.5;
+bgm.currentTime = 34;
+bgm.play().catch(() => {
+  document.addEventListener('click', function tryPlay() {
+    bgm.currentTime = 34;
+    bgm.play().catch(()=>{});
+  }, { once: true });
+});
+document.getElementById('music-btn').textContent = '♫';
+document.getElementById('music-btn').classList.add('on');
+document.getElementById('music-btn').addEventListener('click', () => {
+  musicOn = !musicOn;
+  const btn = document.getElementById('music-btn');
+  btn.textContent = musicOn ? '♫' : '♪';
+  btn.classList.toggle('on', musicOn);
+  if (musicOn) bgm.play().catch(()=>{});
+  else bgm.pause();
+});
+
+// ══════════════════════════════════════
+// 六边形粒子
+// ══════════════════════════════════════
+(function() {
+  const canvas = document.getElementById('particle-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  const pts = Array.from({length:24}, () => ({
+    x:Math.random()*1400-100, y:Math.random()*900,
+    r:Math.random()*5+2,
+    vx:(Math.random()-.5)*.2, vy:(Math.random()-.5)*.2,
+    a:Math.random()*.12+.03,
+    c:Math.random()>.5?'#9b6dff':'#4fc3f7',
+  }));
+  function resize(){ W=canvas.width=innerWidth; H=canvas.height=innerHeight; }
+  addEventListener('resize', resize); resize();
+  function hex(x,y,r){
+    ctx.beginPath();
+    for(let i=0;i<6;i++){
+      const a=Math.PI/180*(60*i-30);
+      i?ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a)):ctx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a));
+    }
+    ctx.closePath();
+  }
+  (function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<-20)p.x=W+20; if(p.x>W+20)p.x=-20;
+      if(p.y<-20)p.y=H+20; if(p.y>H+20)p.y=-20;
+      hex(p.x,p.y,p.r);
+      ctx.strokeStyle=p.c; ctx.globalAlpha=p.a; ctx.lineWidth=0.8; ctx.stroke();
+    });
+    ctx.globalAlpha=1;
+    requestAnimationFrame(draw);
+  })();
+})();
+
+renderList();
+</script>
+</body>
+</html>
