@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Arcane · Letters</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Noto+Serif+SC:wght@300;400&family=Caveat:wght@400;600&family=Dancing+Script:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Noto+Serif+SC:wght@300;400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root { --bg-void: #07050f; }
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -31,6 +31,62 @@
     .slide-up { animation: slideUp .45s cubic-bezier(.2,0,.2,1) both; }
     @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
     @keyframes slideUp { from{opacity:0;transform:translateY(5vh)} to{opacity:1;transform:translateY(0)} }
+
+    /* ══ 进入信件：竖向条带从左到右 ══ */
+    .letter-enter { animation: none; }
+    #page-letter.letter-enter { animation: none; }
+    #page-letter.letter-enter .letter-strip-cover {
+      animation: stripReveal 2s cubic-bezier(.4,0,.2,1) both;
+    }
+    .letter-strip-cover {
+      position:absolute; inset:0; z-index:50; pointer-events:none;
+      display:flex;
+    }
+    .letter-strip-cover span {
+      flex:1; background:#07050f;
+      transform-origin:top center;
+      animation: stripDrop 1.4s cubic-bezier(.4,0,.2,1) both;
+    }
+    .letter-strip-cover span:nth-child(1){animation-delay:.00s}
+    .letter-strip-cover span:nth-child(2){animation-delay:.04s}
+    .letter-strip-cover span:nth-child(3){animation-delay:.08s}
+    .letter-strip-cover span:nth-child(4){animation-delay:.13s}
+    .letter-strip-cover span:nth-child(5){animation-delay:.17s}
+    .letter-strip-cover span:nth-child(6){animation-delay:.21s}
+    .letter-strip-cover span:nth-child(7){animation-delay:.25s}
+    .letter-strip-cover span:nth-child(8){animation-delay:.29s}
+    @keyframes stripDrop {
+      0%   { transform:scaleY(1); opacity:1; }
+      60%  { transform:scaleY(1); opacity:1; }
+      100% { transform:scaleY(0); opacity:0; }
+    }
+    /* ══ 印章解封 ══ */
+    .seal-break { animation: sealBreak 2s ease-out both; }
+    @keyframes sealBreak {
+      0%  { transform:scale(1);   filter:drop-shadow(0 0 6px var(--sa,#9b6dff)); }
+      40% { transform:scale(1.5); filter:drop-shadow(0 0 28px var(--sa,#9b6dff)) drop-shadow(0 0 48px rgba(79,195,247,0.8)); }
+      100%{ transform:scale(1);   filter:drop-shadow(0 0 10px var(--sa,#9b6dff)); }
+    }
+    /* ══ 归档退出：Hextech 噪点消散 ══ */
+    #hextech-flash {
+      position:fixed; inset:0; z-index:999; pointer-events:none;
+      opacity:0; background:repeating-linear-gradient(
+        45deg,
+        rgba(155,109,255,0.15) 0px, rgba(155,109,255,0.15) 1px,
+        transparent 1px, transparent 6px
+      ), repeating-linear-gradient(
+        -45deg,
+        rgba(79,195,247,0.1) 0px, rgba(79,195,247,0.1) 1px,
+        transparent 1px, transparent 6px
+      );
+    }
+    .hextech-out { animation: hextechOut 2s ease-out both; }
+    @keyframes hextechOut {
+      0%  { opacity:0; }
+      25% { opacity:1; }
+      60% { opacity:.6; }
+      100%{ opacity:0; }
+    }
 
     /* ══════════════════════════════ 封面页 ══════════════════════════════ */
     #page-cover {
@@ -77,12 +133,32 @@
       font-size: clamp(16px, 5vw, 24px); letter-spacing: clamp(3px, 1.5vw, 8px);
       text-shadow:0 0 20px rgba(155,109,255,0.7); z-index:1;
     }
-    .cover-sub { color:#4a3a6a; font-size: clamp(9px, 2.5vw, 13px); letter-spacing: clamp(2px, 1vw, 5px); z-index:1; }
-    .cover-hint {
-      color:#4a3a6a; font-size: clamp(9px, 2.5vw, 12px); letter-spacing: clamp(2px, 1vw, 4px);
-      animation:blink 2.5s ease-in-out infinite; z-index:1;
+    .cover-sub {
+      color:#9b6dff; font-size: clamp(11px, 3.2vw, 15px); letter-spacing: clamp(3px, 1.5vw, 8px);
+      z-index:1; text-shadow:0 0 12px rgba(155,109,255,0.6);
+      animation: coverSubGlow 3s ease-in-out infinite;
     }
-    @keyframes blink { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
+    @keyframes coverSubGlow {
+      0%,100%{ opacity:.7; letter-spacing:clamp(3px,1.5vw,8px); }
+      50%{ opacity:1; letter-spacing:clamp(5px,2vw,12px); text-shadow:0 0 20px rgba(155,109,255,0.9),0 0 40px rgba(79,195,247,0.4); }
+    }
+    .cover-hint {
+      color:#c9a0ff; font-size: clamp(11px, 3.2vw, 14px); letter-spacing: clamp(3px, 1.2vw, 6px);
+      z-index:1; position:relative;
+      text-shadow:0 0 10px rgba(155,109,255,0.8);
+      animation: hintPulse 2s ease-in-out infinite;
+    }
+    .cover-hint::before, .cover-hint::after {
+      content:''; position:absolute; top:50%; height:1px; width:clamp(16px,4vw,28px);
+      background:linear-gradient(90deg,transparent,#9b6dff);
+      transform:translateY(-50%);
+    }
+    .cover-hint::before { right:100%; margin-right:8px; }
+    .cover-hint::after  { left:100%;  margin-left:8px; background:linear-gradient(90deg,#9b6dff,transparent); }
+    @keyframes hintPulse {
+      0%,100%{ opacity:.5; transform:scale(1); }
+      50%{ opacity:1; transform:scale(1.05); text-shadow:0 0 18px rgba(155,109,255,1),0 0 32px rgba(79,195,247,0.5); }
+    }
 
     /* ══════════════════════════════ 信件列表页 ══════════════════════════════ */
     #page-list {
@@ -91,7 +167,6 @@
     }
     #page-list::before {
       content:''; position:absolute; inset:0;
-      background: url('角色.webp') center center / cover no-repeat;
       opacity:0.15; pointer-events:none; z-index:0;
     }
     .list-header {
@@ -117,21 +192,21 @@
       transition: transform .25s cubic-bezier(.2,0,.2,1), box-shadow .25s;
       box-shadow: 0 4px 20px rgba(0,0,0,0.6);
     }
-    .letter-card:hover {
-      transform: rotate(calc(var(--rot) * 0.3)) translate(var(--tx), var(--ty)) scale(1.04);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 16px var(--accent);
-      z-index:5;
-    }
     .letter-card::before {
       content:''; position:absolute; left:0; top:0; bottom:0;
       width:3px; background:var(--accent); box-shadow:0 0 8px var(--accent);
+    }
+    .letter-card:active {
+      transform: rotate(calc(var(--rot) * 0.3)) translateY(-4px) scale(1.04);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.8), 0 0 16px var(--accent);
+      z-index:5; animation-play-state:paused;
     }
     .letter-card::after {
       content:''; position:absolute; top:-100%; left:-60%; width:40%; height:300%;
       background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.05) 50%,transparent 60%);
       transition:transform .4s;
     }
-    .letter-card:hover::after { transform:translateX(400%); }
+    .letter-card:active::after { transform:translateX(400%); }
 
     /* ══════════════════════════════ 信件阅读页 ══════════════════════════════ */
     #page-letter { padding:0; justify-content:flex-start; background: var(--letter-bg, #12080e); }
@@ -186,7 +261,7 @@
       padding: clamp(4px, 1vw, 8px) clamp(10px, 3vw, 16px);
       border:1px solid rgba(155,109,255,0.3); border-radius:4px; background:rgba(155,109,255,0.08);
     }
-    .btn-close-letter:hover { color:#e8d0ff; border-color:rgba(155,109,255,0.6); background:rgba(155,109,255,0.15); }
+    .btn-close-letter:active { color:#e8d0ff; border-color:rgba(155,109,255,0.6); background:rgba(155,109,255,0.15); }
     .letter-page-num { color:#2a1e40; font-size: clamp(9px, 2.5vw, 12px); letter-spacing:1px; }
 
     /* ══════════════════════════════ 结尾页 ══════════════════════════════ */
@@ -195,11 +270,106 @@
     }
     #page-ending::before {
       content:''; position:absolute; inset:0;
-      background: url('风格页.webp') left center / cover no-repeat;
       opacity:0.5; pointer-events:none; z-index:0;
     }
 
-    /* ══════════════════════════════ 音乐按钮 ══════════════════════════════ */
+    /* ══ 台词水印 ══ */
+    .quote-layer { position:absolute; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+    .quote-line {
+      position:absolute; white-space:nowrap;
+      font-family:'Cinzel',serif; letter-spacing:.15em;
+      color:rgba(155,109,255,0.22); font-size:clamp(9px,2.2vw,13px);
+      animation: quoteAppear var(--dur,7s) ease-in-out both;
+    }
+    @keyframes quoteAppear {
+      0%   { opacity:0; }
+      15%  { opacity:1; }
+      75%  { opacity:.8; }
+      100% { opacity:0; }
+    }
+
+    /* 主页：信封漂浮 */
+    .envelope-wrap { animation: envFloat 5s ease-in-out infinite; }
+    @keyframes envFloat {
+      0%,100%{ transform:translateY(0px) rotate(0deg); }
+      40%    { transform:translateY(-10px) rotate(.6deg); }
+      70%    { transform:translateY(-5px) rotate(-.4deg); }
+    }
+    /* 主页：背景光晕流动 */
+    #page-cover::after {
+      content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
+      background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(155,109,255,0.08) 0%, transparent 70%);
+      animation: coverAura 8s ease-in-out infinite;
+    }
+    @keyframes coverAura {
+      0%,100%{ transform:scale(1) translateY(0);   opacity:.6; }
+      50%    { transform:scale(1.15) translateY(-3%); opacity:1; }
+    }
+    /* 主页：Hextech 能量水波（JS驱动，随机位置） */
+    #page-cover .cover-sweep {
+      position:absolute; inset:0; pointer-events:none; z-index:0;
+    }
+    .hex-ripple-circle {
+      position:absolute; border-radius:50%; transform:translate(-50%,-50%);
+      border:2px solid rgba(155,109,255,0.3);
+      animation: hexRipple var(--rd,10s) ease-out both;
+    }
+    @keyframes hexRipple {
+      0%  { width:60px;  height:60px;  opacity:.85; }
+      100%{ width:160vw; height:160vw; opacity:0; }
+    }
+
+    /* 列表页：卡片浮动（奇偶错开） */
+    .letter-card:nth-child(odd)  { animation: cardFloat1 6s ease-in-out infinite; }
+    .letter-card:nth-child(even) { animation: cardFloat2 7s ease-in-out infinite; }
+    @keyframes cardFloat1 {
+      0%,100%{ transform:rotate(var(--rot)) translateY(0px); }
+      50%    { transform:rotate(var(--rot)) translateY(-6px); }
+    }
+    @keyframes cardFloat2 {
+      0%,100%{ transform:rotate(var(--rot)) translateY(0px); }
+      50%    { transform:rotate(var(--rot)) translateY(-9px); }
+    }
+    /* 列表页：卡片左侧色条呼吸 */
+    .letter-card::before { animation: accentBreath 4s ease-in-out infinite; }
+    @keyframes accentBreath {
+      0%,100%{ box-shadow:0 0 6px var(--accent); opacity:.7; }
+      50%    { box-shadow:0 0 16px var(--accent),0 0 32px var(--accent); opacity:1; }
+    }
+    /* 列表页：背景粒子扫光 */
+    #page-list::after {
+      content:''; position:absolute; inset:0; pointer-events:none; z-index:1;
+      background:linear-gradient(180deg,rgba(155,109,255,0.04) 0%,transparent 40%,transparent 60%,rgba(79,195,247,0.03) 100%);
+      animation: listScan 12s linear infinite;
+    }
+    @keyframes listScan {
+      0%  { background-position:0 -100%; }
+      100%{ background-position:0 200%; }
+    }
+
+    /* 信件页：纸面微光 */
+    .letter-body::after {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,0.015) 50%,transparent 70%);
+      animation: paperSheen 10s ease-in-out infinite;
+    }
+    @keyframes paperSheen {
+      0%,100%{ transform:translateX(-100%); opacity:0; }
+      40%    { opacity:1; }
+      60%    { transform:translateX(200%); opacity:0; }
+    }
+    /* 信件页：印章持续呼吸 */
+    .letter-seal-large { animation: sealBreathe 4s ease-in-out infinite; }
+    @keyframes sealBreathe {
+      0%,100%{ filter:drop-shadow(0 0 6px var(--letter-accent,#9b6dff)); }
+      50%    { filter:drop-shadow(0 0 18px var(--letter-accent,#9b6dff)) drop-shadow(0 0 32px rgba(79,195,247,0.4)); }
+    }
+    /* 信件页：header 底部光线脉冲 */
+    .letter-header-line { animation: headerLinePulse 5s ease-in-out infinite; }
+    @keyframes headerLinePulse {
+      0%,100%{ opacity:.5; }
+      50%    { opacity:1; box-shadow:0 0 8px var(--letter-accent,#9b6dff); }
+    }
     #music-btn {
       position:fixed; top: clamp(10px, 2vh, 18px); right: clamp(10px, 3vw, 18px);
       width: clamp(30px, 9vw, 40px); height: clamp(30px, 9vw, 40px); border-radius:50%;
@@ -213,6 +383,7 @@
 </head>
 <body>
 <canvas id="particle-canvas"></canvas>
+<div id="hextech-flash"></div>
 <button id="music-btn">♪</button>
 <audio id="bgm" loop src="Ma Meilleure Ennemie-Stromae&Pomme.mp3"></audio>
 
@@ -220,6 +391,7 @@
 
   <!-- ── 封面 ── -->
   <div class="page active" id="page-cover">
+    <div class="cover-sweep" id="cover-sweep"></div>
     <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:clamp(16px,4vh,32px);cursor:pointer;width:100%;" onclick="goTo('list')">
       <div class="envelope-wrap">
         <div class="envelope">
@@ -239,13 +411,14 @@
       </div>
     </div>
     <div class="cover-title">ARCANE</div>
-    <div class="cover-sub">LETTERS &amp; ARCHIVES</div>
+    <div class="cover-sub">ALL FOR ONE</div>
     <div class="cover-hint">点击信封开启</div>
   </div>
 
   <!-- ── 信件列表 ── -->
   <div class="page" id="page-list">
-    <div onclick="goTo('cover')" style="position:absolute;top:clamp(10px,2vh,16px);left:clamp(10px,3vw,16px);z-index:10;cursor:pointer;opacity:0.45;transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.45">
+    <div id="list-bg-lazy" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.15;pointer-events:none;z-index:0;"></div>
+    <div onclick="goTo('cover')" style="position:absolute;top:clamp(10px,2vh,16px);left:clamp(10px,3vw,16px);z-index:10;cursor:pointer;opacity:0.6;">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><line x1="3" y1="3" x2="15" y2="15" stroke="#9b6dff" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="3" x2="3" y2="15" stroke="#9b6dff" stroke-width="1.5" stroke-linecap="round"/></svg>
     </div>
     <div class="list-header">
@@ -263,6 +436,10 @@
 
   <!-- ── 信件阅读 ── -->
   <div class="page" id="page-letter">
+    <div class="letter-strip-cover" id="letter-strip-cover">
+      <span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span>
+    </div>
     <div id="letter-bg-img" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.12;pointer-events:none;z-index:0;"></div>
     <div class="letter-header" id="letter-header" style="position:relative;z-index:1;">
       <div class="letter-header-bg" id="letter-header-bg"></div>
@@ -278,15 +455,15 @@
       <div class="letter-body" id="letter-body"></div>
     </div>
     <div class="letter-footer">
-      <div class="btn-close-letter" onclick="goTo('list')">← 归档</div>
+      <div class="btn-close-letter" onclick="closeLetterAnim()">← 归档</div>
       <div class="letter-page-num" id="letter-page-num"></div>
     </div>
   </div>
 
   <!-- ── 结尾 ── -->
   <div class="page" id="page-ending">
-    <div onclick="goTo('list')" style="position:absolute;top:clamp(10px,2vh,16px);left:clamp(10px,3vw,16px);z-index:10;cursor:pointer;opacity:0.6;transition:opacity .2s;color:#e8d0ff;font-size:clamp(10px,3vw,13px);letter-spacing:2px;text-shadow:0 2px 6px rgba(0,0,0,0.8);" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">← 返回</div>
-
+    <div id="ending-bg-lazy" style="position:absolute;inset:0;background-size:cover;background-position:left center;opacity:0.5;pointer-events:none;z-index:0;"></div>
+    <div onclick="goTo('list')" style="position:absolute;top:clamp(10px,2vh,16px);left:clamp(10px,3vw,16px);z-index:10;cursor:pointer;color:#e8d0ff;font-size:clamp(10px,3vw,13px);letter-spacing:2px;text-shadow:0 2px 6px rgba(0,0,0,0.8);opacity:0.7;">← 返回</div>
     <!-- 右上角作者卡片 -->
     <div style="position:absolute;top:clamp(40px,8vh,70px);right:clamp(12px,4vw,24px);z-index:2;display:flex;flex-direction:column;align-items:center;gap:clamp(8px,2vh,16px);width:clamp(140px,48vw,210px);">
       <div style="width:clamp(56px,16vw,84px);height:clamp(56px,16vw,84px);border-radius:50%;border:2px solid rgba(155,109,255,0.5);overflow:hidden;box-shadow:0 0 18px rgba(155,109,255,0.4);background:#1a1030;display:flex;align-items:center;justify-content:center;">
@@ -297,7 +474,7 @@
       <div style="font-family:Caveat,cursive;font-size:clamp(14px,4vw,20px);color:#c9a0ff;text-shadow:0 2px 8px rgba(0,0,0,0.9);letter-spacing:2px;font-weight:600;">QQ：1447909240</div>
     </div>
 
-    <div onclick="goTo('cover')" style="position:absolute;bottom:clamp(16px,3vh,28px);left:50%;transform:translateX(-50%);z-index:2;color:#c9a0ff;text-shadow:0 2px 8px rgba(0,0,0,0.8);font-size:clamp(10px,3vw,13px);letter-spacing:2px;cursor:pointer;opacity:0.7;transition:opacity .2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">← 回到封面</div>
+    <div onclick="goTo('cover')" style="position:absolute;bottom:clamp(16px,3vh,28px);left:50%;transform:translateX(-50%);z-index:2;color:#c9a0ff;text-shadow:0 2px 8px rgba(0,0,0,0.8);font-size:clamp(10px,3vw,13px);letter-spacing:2px;cursor:pointer;opacity:0.7;">← 回到封面</div>
   </div>
 
 </div>
@@ -359,13 +536,31 @@ const letters = [
 ];
 
 // ══════════════════════════════════════
+// 背景图懒加载
+// ══════════════════════════════════════
+const pageBgCfg = {
+  cover:  { id:'cover-bg-lazy',  url:"风格页3.webp", pos:'center center' },
+  list:   { id:'list-bg-lazy',   url:"角色.webp",    pos:'center center' },
+  ending: { id:'ending-bg-lazy', url:"风格页.webp",  pos:'left center'   },
+};
+const bgLoaded = {};
+function lazyLoadBg(pageId) {
+  const cfg = pageBgCfg[pageId];
+  if (!cfg || bgLoaded[pageId]) return;
+  bgLoaded[pageId] = true;
+  const el = document.getElementById(cfg.id);
+  if (el) el.style.backgroundImage = `url('${cfg.url}')`;
+}
+
+// ══════════════════════════════════════
 // 页面切换
 // ══════════════════════════════════════
 let currentLetter = null;
 function goTo(pageId) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active','fade-in','slide-up'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active','fade-in','slide-up','letter-enter'));
   const t = document.getElementById('page-' + pageId);
-  t.classList.add('active', pageId === 'letter' ? 'slide-up' : 'fade-in');
+  t.classList.add('active', pageId === 'letter' ? 'letter-enter' : 'fade-in');
+  lazyLoadBg(pageId);
   if (pageId === 'letter' && currentLetter && currentLetter.bgm) {
     const bgm = document.getElementById('bgm');
     if (bgm.getAttribute('data-src') !== currentLetter.bgm) {
@@ -374,6 +569,14 @@ function goTo(pageId) {
       if (musicOn) bgm.play().catch(()=>{});
     }
   }
+}
+
+function closeLetterAnim() {
+  const flash = document.getElementById('hextech-flash');
+  flash.classList.remove('hextech-out');
+  void flash.offsetWidth;
+  flash.classList.add('hextech-out');
+  setTimeout(() => goTo('list'), 720);
 }
 
 // ══════════════════════════════════════
@@ -424,7 +627,13 @@ function openLetter(i) {
   document.getElementById('letter-bg-img').style.backgroundImage = l.bgImg ? `url('${l.bgImg}')` : 'none';
   document.getElementById('letter-header-bg').style.background = l.headerBg;
   document.getElementById('letter-header-line').style.background = `linear-gradient(90deg,transparent,${l.accent},transparent)`;
-  document.getElementById('letter-seal-large').innerHTML = l.seal;
+  const sealEl = document.getElementById('letter-seal-large');
+  sealEl.innerHTML = l.seal;
+  sealEl.style.setProperty('--sa', l.accent);
+  sealEl.classList.remove('seal-break');
+  void sealEl.offsetWidth;
+  sealEl.classList.add('seal-break');
+  setTimeout(() => sealEl.classList.remove('seal-break'), 2000);
   document.getElementById('letter-sender').style.color = l.accent;
   document.getElementById('letter-sender').style.textShadow = `0 0 10px ${l.accent}`;
   document.getElementById('letter-sender').textContent = l.from;
@@ -433,6 +642,9 @@ function openLetter(i) {
   document.getElementById('letter-body').style.color = l.ink;
   document.getElementById('letter-page-num').textContent = `${i+1} / ${letters.length}`;
   document.querySelector('.letter-scroll').scrollTop = 0;
+  // 重置条带动效
+  const strips = document.querySelectorAll('.letter-strip-cover span');
+  strips.forEach(s => { s.style.animation='none'; void s.offsetWidth; s.style.animation=''; });
   goTo('letter');
 }
 
@@ -498,7 +710,77 @@ document.getElementById('music-btn').addEventListener('click', () => {
   })();
 })();
 
+// ══════════════════════════════════════
+// 台词水印层（随机出现渐弱消失）
+// ══════════════════════════════════════
+const QUOTES = [
+  "The truth won't set you free.",
+  "The people who love you will hurt you the most.",
+  "Nothing's fair in this city.",
+  "She's not your little girl anymore.",
+  "We're the ones who have to carry it.",
+  "I just wanted to be your sister.",
+  "Power only yields to power.",
+  "You were the best of us.",
+  "Progress... at what cost?",
+  "We're done being afraid.",
+];
+const quoteLayers = [];
+function buildQuoteLayer(pageEl) {
+  const layer = document.createElement('div');
+  layer.className = 'quote-layer';
+  pageEl.appendChild(layer);
+  quoteLayers.push(layer);
+}
+let _quoteIdx = 0;
+function spawnQuote() {
+  quoteLayers.forEach(layer => {
+    if (!layer.closest('.page.active')) return;
+    const el = document.createElement('div');
+    el.className = 'quote-line';
+    el.textContent = QUOTES[_quoteIdx % QUOTES.length];
+    _quoteIdx++;
+    const dur = 5 + Math.random() * 5;
+    el.style.cssText = `top:${8+Math.random()*80}%;left:${Math.random()*72}%;--dur:${dur}s;`;
+    layer.appendChild(el);
+    setTimeout(() => el.remove(), dur * 1000 + 100);
+  });
+}
+setInterval(spawnQuote, 2200);
+
+// ══════════════════════════════════════
+// 封面水波（随机位置，随机间隔）
+// ══════════════════════════════════════
+const rippleColors = [
+  'rgba(155,109,255,0.32)', 'rgba(120,90,220,0.26)',
+  'rgba(79,195,247,0.22)',  'rgba(155,109,255,0.28)', 'rgba(79,195,247,0.18)'
+];
+const rippleWidths = ['3px','2px','2.5px','2px','1.5px'];
+let _rippleIdx = 0;
+function spawnRipple() {
+  const sweep = document.getElementById('cover-sweep');
+  if (!sweep) return;
+  const ci = _rippleIdx % rippleColors.length;
+  _rippleIdx++;
+  const el = document.createElement('div');
+  el.className = 'hex-ripple-circle';
+  const dur = 9 + Math.random() * 5;
+  // 起始中心：在屏幕中心附近随机偏移，但不超出信封位置
+  const cx = 35 + Math.random() * 30; // 35%~65%
+  const cy = 30 + Math.random() * 25; // 30%~55%（在信封下方区域之下）
+  el.style.cssText = `left:${cx}%;top:${cy}%;border-width:${rippleWidths[ci]};border-color:${rippleColors[ci]};--rd:${dur}s;`;
+  sweep.appendChild(el);
+  setTimeout(() => el.remove(), dur * 1000 + 100);
+  // 下一次随机间隔：4s ~ 9s
+  setTimeout(spawnRipple, 4000 + Math.random() * 5000);
+}
+spawnRipple();
+
 renderList();
+['page-cover','page-list','page-letter','page-ending'].forEach(id => {
+  buildQuoteLayer(document.getElementById(id));
+});
+spawnQuote();
 </script>
 </body>
 </html>
