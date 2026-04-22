@@ -6,7 +6,6 @@
   <title>Arcane · Letters</title>
   <link rel="preload" as="image" href="https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/风格页3.webp" type="image/webp">
   <link rel="preload" as="image" href="https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/封面.webp" type="image/webp">
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Noto+Serif+SC:wght@300;400&family=Caveat:wght@400;600&display=swap">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Noto+Serif+SC:wght@300;400&family=Caveat:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <style>
     :root { --bg-void: #07050f; }
@@ -835,12 +834,14 @@ function injectBg(id, url) {
   if (el) el.style.backgroundImage = `url('${url}')`;
 }
 
-// 第1批：首页（已由 CSS + preload 加载，这里只是等它完成）
-Promise.all([
-  loadImg(CDN_A+'风格页3.webp'),
-  loadImg(CDN_A+'封面.webp'),
-]).then(() => {
-  // 首页图到了，关闭加载页
+// 第1批：等 preload 的首页图完成（不重复请求）
+const preloads = document.querySelectorAll('link[rel="preload"][as="image"]');
+Promise.all(Array.from(preloads).map(link => {
+  const img = new Image();
+  img.src = link.href; // 命中浏览器缓存，不会重复下载
+  if (img.complete) return Promise.resolve();
+  return new Promise(r => { img.onload = img.onerror = r; });
+})).then(() => {
   dismissLoading();
   // 第2批：列表页
   const listUrl = CDN_A+'角色.webp';
