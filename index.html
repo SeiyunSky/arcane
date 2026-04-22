@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Arcane · Letters</title>
+  <link rel="preload" as="image" href="https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/风格页3.webp" type="image/webp">
+  <link rel="preload" as="image" href="https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/封面.webp" type="image/webp">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Noto+Serif+SC:wght@300;400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root { --bg-void: #07050f; }
@@ -234,6 +236,7 @@
       padding: clamp(16px, 3vh, 28px) clamp(20px, 6vw, 32px) clamp(60px, 12vh, 90px);
       -webkit-overflow-scrolling:touch;
     }
+    .letter-scroll.typing { overflow-y:hidden; }
     .letter-scroll::-webkit-scrollbar { width:3px; }
     .letter-scroll::-webkit-scrollbar-track { background:transparent; }
     .letter-scroll::-webkit-scrollbar-thumb { background:rgba(155,109,255,0.2); border-radius:2px; }
@@ -278,7 +281,7 @@
     .quote-line {
       position:absolute; white-space:nowrap;
       font-family:'Cinzel',serif; letter-spacing:.15em;
-      color:rgba(155,109,255,0.22); font-size:clamp(9px,2.2vw,13px);
+      color:rgba(200,160,255,0.45); font-size:clamp(10px,2.4vw,14.3px);
       animation: quoteAppear var(--dur,7s) ease-in-out both;
     }
     @keyframes quoteAppear {
@@ -379,13 +382,146 @@
       z-index:100; transition:border-color .2s,color .2s,box-shadow .2s;
     }
     #music-btn.on { border-color:#9b6dff; color:#9b6dff; box-shadow:0 0 10px rgba(155,109,255,0.4); }
+
+    /* ══ 加载页 ══ */
+    #loading-screen {
+      position:fixed; inset:0; z-index:9999;
+      background:radial-gradient(ellipse at 50% 40%,#1a0d2e 0%,#07050f 70%);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:clamp(12px,3vh,22px);
+      transition:opacity .6s ease;
+      overflow:hidden;
+    }
+    #loading-screen.fade-out { opacity:0; pointer-events:none; }
+    /* 背景：Hextech 网格 */
+    #loading-screen::before {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background:
+        linear-gradient(rgba(155,109,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(155,109,255,0.04) 1px, transparent 1px);
+      background-size:clamp(30px,8vw,50px) clamp(30px,8vw,50px);
+      animation:gridDrift 8s linear infinite;
+    }
+    @keyframes gridDrift { 0%{transform:translateY(0)} 100%{transform:translateY(clamp(30px,8vw,50px))} }
+    /* 背景：电弧闪烁 */
+    .load-arc {
+      position:absolute; width:1px; background:linear-gradient(180deg,transparent,#9b6dff,#4fc3f7,transparent);
+      opacity:0; animation:arcFlash var(--ad,2s) ease-in-out infinite;
+    }
+    @keyframes arcFlash {
+      0%,85%,100%{opacity:0;transform:scaleY(0.3)}
+      90%{opacity:.8;transform:scaleY(1)}
+      93%{opacity:.3;transform:scaleY(1)}
+    }
+    /* Hex 徽章 */
+    .loading-hex {
+      width:clamp(48px,14vw,68px); height:clamp(48px,14vw,68px);
+      position:relative; z-index:1;
+      animation:loadHexSpin 4s linear infinite;
+    }
+    .loading-hex svg { width:100%; height:100%; filter:drop-shadow(0 0 16px rgba(155,109,255,0.7)); }
+    .loading-hex::after {
+      content:''; position:absolute; inset:-40%; border-radius:50%;
+      border:1px solid rgba(155,109,255,0.15);
+      animation:hexRing 3s ease-in-out infinite;
+    }
+    @keyframes loadHexSpin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    @keyframes hexRing { 0%,100%{transform:scale(.8);opacity:.3} 50%{transform:scale(1.2);opacity:.8} }
+    /* 主文字 */
+    .loading-text {
+      font-family:'Cinzel',serif; color:#c9a0ff; position:relative; z-index:1;
+      font-size:clamp(13px,3.8vw,18px); letter-spacing:clamp(3px,1.5vw,8px);
+      text-shadow:0 0 20px rgba(155,109,255,0.8);
+      animation:loadTextPulse 1.5s ease-in-out infinite;
+    }
+    /* 文字两侧装饰线 */
+    .loading-text::before, .loading-text::after {
+      content:''; position:absolute; top:50%; height:1px; width:clamp(24px,8vw,48px);
+      transform:translateY(-50%);
+    }
+    .loading-text::before {
+      right:100%; margin-right:clamp(6px,2vw,12px);
+      background:linear-gradient(90deg,transparent,#9b6dff);
+      animation:lineExtend 2s ease-in-out infinite;
+    }
+    .loading-text::after {
+      left:100%; margin-left:clamp(6px,2vw,12px);
+      background:linear-gradient(90deg,#9b6dff,transparent);
+      animation:lineExtend 2s ease-in-out infinite reverse;
+    }
+    @keyframes lineExtend { 0%,100%{width:clamp(16px,4vw,28px);opacity:.4} 50%{width:clamp(32px,10vw,60px);opacity:1} }
+    @keyframes loadTextPulse {
+      0%,100%{ opacity:.6; text-shadow:0 0 10px rgba(155,109,255,0.5); }
+      50%{ opacity:1; text-shadow:0 0 28px rgba(155,109,255,1),0 0 56px rgba(79,195,247,0.4); }
+    }
+    /* 进度条 */
+    .loading-bar-wrap {
+      width:clamp(200px,60vw,320px); height:3px; position:relative; z-index:1;
+      background:rgba(155,109,255,0.12); border-radius:2px; overflow:visible;
+      box-shadow:0 0 12px rgba(155,109,255,0.15);
+    }
+    .loading-bar-wrap::before, .loading-bar-wrap::after {
+      content:''; position:absolute; top:50%; transform:translateY(-50%);
+      width:6px; height:6px; border-radius:50%; border:1px solid #9b6dff;
+      box-shadow:0 0 8px rgba(155,109,255,0.6);
+      animation:nodePulse 1.2s ease-in-out infinite;
+    }
+    .loading-bar-wrap::before { left:-10px; }
+    .loading-bar-wrap::after { right:-10px; animation-delay:.6s; }
+    @keyframes nodePulse { 0%,100%{box-shadow:0 0 4px rgba(155,109,255,0.4);transform:translateY(-50%) scale(.8)} 50%{box-shadow:0 0 14px rgba(155,109,255,0.9);transform:translateY(-50%) scale(1.2)} }
+    .loading-bar {
+      width:0%; height:100%; border-radius:2px; overflow:hidden;
+      background:linear-gradient(90deg,#9b6dff,#4fc3f7,#9b6dff);
+      background-size:200% 100%;
+      animation:loadBarFill 3s cubic-bezier(.1,.4,.3,1) forwards, loadBarShimmer 1s linear infinite;
+      box-shadow:0 0 10px rgba(155,109,255,0.5);
+    }
+    @keyframes loadBarFill { 0%{width:0%} 100%{width:100%} }
+    @keyframes loadBarShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    /* 英文副标题 */
+    .loading-sub {
+      font-family:'Cinzel',serif; color:rgba(155,109,255,0.35); position:relative; z-index:1;
+      font-size:clamp(9px,2.2vw,11px); letter-spacing:clamp(3px,1.2vw,6px);
+    }
+    /* 底部引文 */
+    .loading-quote {
+      position:absolute; bottom:clamp(20px,5vh,40px); z-index:1;
+      font-family:'Cinzel',serif; color:rgba(200,160,255,0.7);
+      font-size:clamp(11px,3vw,15px); letter-spacing:.2em; font-style:italic;
+      text-shadow:0 0 14px rgba(155,109,255,0.6);
+      animation:quoteBreath 3s ease-in-out infinite;
+    }
+    @keyframes quoteBreath { 0%,100%{opacity:.5;text-shadow:0 0 8px rgba(155,109,255,0.3)} 50%{opacity:1;text-shadow:0 0 22px rgba(155,109,255,0.9),0 0 40px rgba(79,195,247,0.3)} }
   </style>
 </head>
 <body>
+<!-- 加载页 -->
+<div id="loading-screen">
+  <!-- 电弧闪烁 -->
+  <div class="load-arc" style="left:12%;top:5%;height:35%;--ad:2.2s"></div>
+  <div class="load-arc" style="right:18%;top:10%;height:25%;--ad:1.8s;animation-delay:.5s"></div>
+  <div class="load-arc" style="left:30%;bottom:8%;height:20%;--ad:2.6s;animation-delay:1.2s"></div>
+  <div class="load-arc" style="right:8%;bottom:15%;height:30%;--ad:2s;animation-delay:.8s"></div>
+  <div class="load-arc" style="left:55%;top:3%;height:18%;--ad:3s;animation-delay:1.5s"></div>
+  <div class="load-arc" style="right:40%;bottom:5%;height:22%;--ad:2.4s;animation-delay:.3s"></div>
+
+  <div class="loading-hex">
+    <svg viewBox="0 0 52 52" fill="none">
+      <polygon points="26,2 48,14 48,38 26,50 4,38 4,14" fill="rgba(80,40,140,0.3)" stroke="#9b6dff" stroke-width="1.5"/>
+      <polygon points="26,10 40,18 40,34 26,42 12,34 12,18" fill="rgba(60,20,100,0.2)" stroke="#c9a0ff" stroke-width="0.8"/>
+      <circle cx="26" cy="26" r="4" fill="#9b6dff" opacity="0.9"/>
+    </svg>
+  </div>
+  <div class="loading-text">正在进入皮尔特沃夫</div>
+  <div class="loading-bar-wrap"><div class="loading-bar"></div></div>
+  <div class="loading-sub">ENTERING PILTOVER</div>
+  <div class="loading-quote">"Progress... at what cost?"</div>
+</div>
+
 <canvas id="particle-canvas"></canvas>
 <div id="hextech-flash"></div>
 <button id="music-btn">♪</button>
-<audio id="bgm" loop src="Ma Meilleure Ennemie-Stromae&Pomme.mp3"></audio>
+<audio id="bgm" loop></audio>
 
 <div id="stage">
 
@@ -417,7 +553,7 @@
 
   <!-- ── 信件列表 ── -->
   <div class="page" id="page-list">
-    <div style="position:absolute;inset:0;background:url('https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/角色.webp') center/cover no-repeat;opacity:0.15;pointer-events:none;z-index:0;"></div>
+    <div id="list-bg" style="position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.15;pointer-events:none;z-index:0;"></div>
     <div onclick="goTo('cover')" style="position:absolute;top:clamp(10px,2vh,16px);left:clamp(10px,3vw,16px);z-index:10;cursor:pointer;opacity:0.6;">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><line x1="3" y1="3" x2="15" y2="15" stroke="#9b6dff" stroke-width="1.5" stroke-linecap="round"/><line x1="15" y1="3" x2="3" y2="15" stroke="#9b6dff" stroke-width="1.5" stroke-linecap="round"/></svg>
     </div>
@@ -429,7 +565,7 @@
 
     <!-- Lway 入口 -->
     <div onclick="goTo('ending')" class="letter-card" id="lway-card" style="--accent:#9b6dff;--rot:2deg;--tx:0px;--ty:0px;background:#0a0514;cursor:pointer;">
-      <div id="lway-bg" style="position:absolute;inset:0;opacity:0.3;pointer-events:none;border-radius:6px;background-image:url('https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/角色.webp');background-size:cover;background-position:center bottom;"></div>
+      <div id="lway-bg" style="position:absolute;inset:0;opacity:0.3;pointer-events:none;border-radius:6px;background-size:cover;background-position:center bottom;"></div>
       <div style="position:relative;z-index:1;width:100%;text-align:center;color:#c9a0ff;font-family:Caveat,cursive;font-size:clamp(18px,5.5vw,28px);font-weight:600;text-shadow:0 0 12px rgba(155,109,255,0.5);">Lway</div>
     </div>
   </div>
@@ -462,12 +598,12 @@
 
   <!-- ── 结尾 ── -->
   <div class="page" id="page-ending">
-    <div style="position:absolute;inset:0;background:url('https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/风格页.webp') left center/cover no-repeat;opacity:0.5;pointer-events:none;z-index:0;"></div>
+    <div id="ending-bg" style="position:absolute;inset:0;background-size:cover;background-position:left center;opacity:0.5;pointer-events:none;z-index:0;"></div>
     <div onclick="goTo('list')" style="position:absolute;top:clamp(10px,2vh,16px);left:clamp(10px,3vw,16px);z-index:10;cursor:pointer;color:#e8d0ff;font-size:clamp(10px,3vw,13px);letter-spacing:2px;text-shadow:0 2px 6px rgba(0,0,0,0.8);opacity:0.7;">← 返回</div>
     <!-- 右上角作者卡片 -->
     <div style="position:absolute;top:clamp(40px,8vh,70px);right:clamp(12px,4vw,24px);z-index:2;display:flex;flex-direction:column;align-items:center;gap:clamp(8px,2vh,16px);width:clamp(140px,48vw,210px);">
       <div style="width:clamp(56px,16vw,84px);height:clamp(56px,16vw,84px);border-radius:50%;border:2px solid rgba(155,109,255,0.5);overflow:hidden;box-shadow:0 0 18px rgba(155,109,255,0.4);background:#1a1030;display:flex;align-items:center;justify-content:center;">
-        <img src="https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/头像.png" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=color:#9b6dff;font-size:10px;>头像占位</div>'">
+        <img id="avatar-img" data-src="https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/头像.png" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=color:#9b6dff;font-size:10px;>头像占位</div>'">
       </div>
       <div style="font-family:Caveat,cursive;font-size:clamp(22px,7vw,34px);color:#e8d0ff;text-shadow:0 0 18px rgba(155,109,255,0.7),0 2px 10px rgba(0,0,0,0.9);letter-spacing:3px;font-weight:600;">沫路</div>
       <div style="font-family:Caveat,'Noto Serif SC',cursive;font-size:clamp(12px,3.5vw,17px);color:#c9a0ff;text-shadow:0 2px 10px rgba(0,0,0,0.9);text-align:center;line-height:1.8;letter-spacing:1px;">沫沫人生，陌陌你我。</div>
@@ -495,7 +631,7 @@ const letters = [
       <rect x="25" y="17" width="8" height="5" rx="2" fill="rgba(240,120,40,0.5)" stroke="#e07840" stroke-width="0.8"/>
       <rect x="14" y="36" width="24" height="5" rx="2" fill="rgba(200,80,20,0.5)" stroke="#e07840" stroke-width="0.8"/>
     </svg>`,
-    body: `Powder，\n\n（在这里写Vi写给Powder/Jinx的信件内容。）\n\n——你的姐姐\n   Vi`,
+    body: `Powder，\n\n我总是在怀念。怀念那些失去的。\n\n你记得吗？我们那时总说范德尔的坏话——说他没胆子闯荡，说他对谁都一副讨好的样子。我们蜗居在地下城，嫌它闭塞，聊上城，聊梦想。我说我一定会带你走，带范德尔，带小不点，带所有人，去一个更远、更好的地方。\n\n我装出一副势在必得的样子，好像头顶不是摇摇欲坠的破烂木板，而是已经实现了的愿景。\n\n其实我只是期待你看我的目光——那种如炬的、不自觉的、发自内心的笑容。那让我觉得你需要我。让我觉得我是你的姐姐，不只是一个满嘴空话的人。\n\n后来的事你都知道了。范德尔倒在血泊里，你消失在硝烟中。我被丢进那个不见天日的地方，日子就靠数墙上的裂缝来过。每一道裂缝里都住着一句我没说出口的话。我以为来日方长，却不知那一眼已是诀别。\n\n再见到你的时候，我几乎没有认出你。不是你变了——是你眼睛里那团火，从取暖的变成了烧人的。你笑起来的弧度一模一样，可那弧度里盛放的东西，我再也读不懂了。我张了张嘴，你的名字卡在喉头，像一枚生了锈的钥匙，再也拧不开从前的门。\n\n你不必认我。但我会认你。哪怕你把自己拆碎了重新拼，哪怕你换了名字、换了阵营、换了整个世界的敌我，我也能从千万人里一眼将你找到。因为你是我妹妹。这件事不需要你同意。\n\n那个更远更好的地方，我至今仍欠着你一程。\n\n我需要你。\n\n——你的姐姐\n   Vi`,
   },
   {
     id: 'silco-jinx', from: 'SILCO', to: 'JINX',
@@ -554,6 +690,8 @@ function goTo(pageId) {
 }
 
 function closeLetterAnim() {
+  clearInterval(window._typeTimer);
+  document.querySelector('.letter-scroll').classList.remove('typing');
   const flash = document.getElementById('hextech-flash');
   flash.classList.remove('hextech-out');
   void flash.offsetWidth;
@@ -584,7 +722,7 @@ function renderList() {
          style="--accent:${l.accent};--rot:${layout[i].rot};--tx:0px;--ty:0px;
                 background:${l.bg};top:${layout[i].top};left:${layout[i].left};"
          onclick="openLetter(${i})">
-      <div style="position:absolute;inset:0;background-image:url('https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/角色.webp');background-size:cover;background-position:center ${bgPosY[i]};opacity:0.3;pointer-events:none;border-radius:6px;"></div>
+      <div class="card-bg-lazy" style="position:absolute;inset:0;background-size:cover;background-position:center ${bgPosY[i]};opacity:0.3;pointer-events:none;border-radius:6px;"></div>
       <div style="position:relative;z-index:1;width:100%;text-align:center;color:${l.accent};${fonts[i]}text-shadow:0 0 12px ${l.accent};">${l.from}</div>
     </div>`).join('');
 
@@ -620,14 +758,34 @@ function openLetter(i) {
   document.getElementById('letter-sender').style.textShadow = `0 0 10px ${l.accent}`;
   document.getElementById('letter-sender').textContent = l.from;
   document.getElementById('letter-receiver').textContent = l.to;
-  document.getElementById('letter-body').textContent = l.body;
+  document.getElementById('letter-body').textContent = '';
   document.getElementById('letter-body').style.color = l.ink;
   document.getElementById('letter-page-num').textContent = `${i+1} / ${letters.length}`;
-  document.querySelector('.letter-scroll').scrollTop = 0;
+  const scrollEl = document.querySelector('.letter-scroll');
+  scrollEl.scrollTop = 0;
+  scrollEl.classList.add('typing');
   // 重置条带动效
   const strips = document.querySelectorAll('.letter-strip-cover span');
   strips.forEach(s => { s.style.animation='none'; void s.offsetWidth; s.style.animation=''; });
   goTo('letter');
+  // 逐字打字效果
+  clearInterval(window._typeTimer);
+  const bodyEl = document.getElementById('letter-body');
+  const fullText = l.body;
+  let ci = 0;
+  const speed = 45; // ms per char
+  window._typeTimer = setInterval(() => {
+    if (ci < fullText.length) {
+      bodyEl.textContent += fullText[ci];
+      ci++;
+      // 自动滚动到底部
+      scrollEl.scrollTop = scrollEl.scrollHeight;
+    } else {
+      clearInterval(window._typeTimer);
+      // 打字完成，解锁滚动
+      scrollEl.classList.remove('typing');
+    }
+  }, speed);
 }
 
 // ══════════════════════════════════════
@@ -636,12 +794,68 @@ function openLetter(i) {
 let musicOn = true;
 const bgm = document.getElementById('bgm');
 bgm.volume = 0.5;
-bgm.currentTime = 34;
-bgm.play().catch(() => {
-  document.addEventListener('click', function tryPlay() {
-    bgm.currentTime = 34;
-    bgm.play().catch(()=>{});
-  }, { once: true });
+
+function startBgm() {
+  if (bgm.src && bgm.src !== location.href) return;
+  bgm.src = 'Ma Meilleure Ennemie-Stromae&Pomme.mp3';
+  bgm.currentTime = 34;
+  bgm.play().catch(() => {
+    document.addEventListener('click', function tryPlay() {
+      bgm.currentTime = 34;
+      bgm.play().catch(()=>{});
+    }, { once: true });
+  });
+}
+
+// ══════════════════════════════════════
+// 加载页：3秒后淡出
+// ══════════════════════════════════════
+setTimeout(() => {
+  const ls = document.getElementById('loading-screen');
+  ls.classList.add('fade-out');
+  setTimeout(() => ls.remove(), 600);
+}, 3000);
+
+// ══════════════════════════════════════
+// 分批加载：首页图 → 列表图 → 其余 → 音乐
+// ══════════════════════════════════════
+const CDN_A = 'https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/';
+function loadImg(url) {
+  return new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = url; });
+}
+function injectBg(id, url) {
+  const el = document.getElementById(id);
+  if (el) el.style.backgroundImage = `url('${url}')`;
+}
+
+// 第1批：首页（已由 CSS + preload 加载，这里只是等它完成）
+Promise.all([
+  loadImg(CDN_A+'风格页3.webp'),
+  loadImg(CDN_A+'封面.webp'),
+]).then(() => {
+  // 第2批：列表页
+  const listUrl = CDN_A+'角色.webp';
+  injectBg('list-bg', listUrl);
+  injectBg('lway-bg', listUrl);
+  document.querySelectorAll('.card-bg-lazy').forEach(el => {
+    el.style.backgroundImage = `url('${listUrl}')`;
+  });
+  return loadImg(listUrl);
+}).then(() => {
+  // 第3批：信件背景 + 尾页 + 头像
+  injectBg('ending-bg', CDN_A+'风格页.webp');
+  const avatar = document.getElementById('avatar-img');
+  if (avatar && avatar.dataset.src) avatar.src = avatar.dataset.src;
+  return Promise.all([
+    loadImg(CDN_A+'风格页.webp'),
+    loadImg(CDN_A+'金克斯.webp'),
+    loadImg(CDN_A+'风格页2.webp'),
+    loadImg(CDN_A+'风格页4.webp'),
+    loadImg(CDN_A+'头像.png'),
+  ]);
+}).then(() => {
+  // 最后：音乐
+  startBgm();
 });
 document.getElementById('music-btn').textContent = '♫';
 document.getElementById('music-btn').classList.add('on');
@@ -706,6 +920,16 @@ const QUOTES = [
   "You were the best of us.",
   "Progress... at what cost?",
   "We're done being afraid.",
+  "Is there anything so undoing as a daughter?",
+  "What could be more terrifying than change?",
+  "In the pursuit of great, we failed to do good.",
+  "Sisters. Apart. Together.",
+  "I've seen what you've become.",
+  "Nobody wins in war.",
+  "Oil and water, that's us.",
+  "The monster I've created.",
+  "When people look up at you, they see hope.",
+  "Loneliness is a slow poison.",
 ];
 const quoteLayers = [];
 function buildQuoteLayer(pageEl) {
@@ -716,19 +940,25 @@ function buildQuoteLayer(pageEl) {
 }
 let _quoteIdx = 0;
 function spawnQuote() {
+  const count = 1 + Math.floor(Math.random() * 3); // 1~3个
   quoteLayers.forEach(layer => {
     if (!layer.closest('.page.active')) return;
-    const el = document.createElement('div');
-    el.className = 'quote-line';
-    el.textContent = QUOTES[_quoteIdx % QUOTES.length];
-    _quoteIdx++;
-    const dur = 5 + Math.random() * 5;
-    el.style.cssText = `top:${8+Math.random()*80}%;left:${Math.random()*72}%;--dur:${dur}s;`;
-    layer.appendChild(el);
-    setTimeout(() => el.remove(), dur * 1000 + 100);
+    for (let n = 0; n < count; n++) {
+      const el = document.createElement('div');
+      el.className = 'quote-line';
+      el.textContent = QUOTES[_quoteIdx % QUOTES.length];
+      _quoteIdx++;
+      const dur = 5 + Math.random() * 5;
+      // 避开中间区域：top 8~38% 或 62~88%，left 0~30% 或 50~80%
+      const top = Math.random() < .5 ? 8+Math.random()*30 : 62+Math.random()*26;
+      const left = Math.random() < .5 ? Math.random()*30 : 50+Math.random()*30;
+      el.style.cssText = `top:${top}%;left:${left}%;--dur:${dur}s;`;
+      layer.appendChild(el);
+      setTimeout(() => el.remove(), dur * 1000 + 100);
+    }
   });
 }
-setInterval(spawnQuote, 2200);
+setInterval(spawnQuote, 3100);
 
 // ══════════════════════════════════════
 // 封面水波（随机位置，随机间隔）
