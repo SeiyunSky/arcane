@@ -6,7 +6,8 @@
   <title>Arcane · Letters</title>
   <link rel="preload" as="image" href="https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/风格页3.webp" type="image/webp">
   <link rel="preload" as="image" href="https://cdn.jsdelivr.net/gh/SeiyunSky/arcane@main/封面.webp" type="image/webp">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Noto+Serif+SC:wght@300;400&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Noto+Serif+SC:wght@300;400&family=Caveat:wght@400;600&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Noto+Serif+SC:wght@300;400&family=Caveat:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
   <style>
     :root { --bg-void: #07050f; }
     * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -808,13 +809,19 @@ function startBgm() {
 }
 
 // ══════════════════════════════════════
-// 加载页：3秒后淡出
+// 加载页：首页图加载完 + 最少2秒后淡出
 // ══════════════════════════════════════
-setTimeout(() => {
-  const ls = document.getElementById('loading-screen');
-  ls.classList.add('fade-out');
-  setTimeout(() => ls.remove(), 600);
-}, 3000);
+const _loadStart = Date.now();
+function dismissLoading() {
+  const elapsed = Date.now() - _loadStart;
+  const wait = Math.max(0, 2000 - elapsed);
+  setTimeout(() => {
+    const ls = document.getElementById('loading-screen');
+    if (!ls) return;
+    ls.classList.add('fade-out');
+    setTimeout(() => ls.remove(), 600);
+  }, wait);
+}
 
 // ══════════════════════════════════════
 // 分批加载：首页图 → 列表图 → 其余 → 音乐
@@ -833,6 +840,8 @@ Promise.all([
   loadImg(CDN_A+'风格页3.webp'),
   loadImg(CDN_A+'封面.webp'),
 ]).then(() => {
+  // 首页图到了，关闭加载页
+  dismissLoading();
   // 第2批：列表页
   const listUrl = CDN_A+'角色.webp';
   injectBg('list-bg', listUrl);
